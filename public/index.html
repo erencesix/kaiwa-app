@@ -424,7 +424,8 @@ body{
 .tr-body.on{display:block;}
 .tr-line{font-size:12px;line-height:2.1;color:var(--ink2);font-weight:300;display:flex;align-items:baseline;gap:2px;}
 .tr-line strong{color:var(--ink);font-weight:500;}
-.tr-line.jp{font-size:11px;color:var(--ink3);line-height:1.7;}
+.tr-line.orig{font-size:11px;color:var(--ink3);line-height:1.7;font-style:italic;}
+.tr-gap{height:6px;}
 .tr-ts{font-size:10px;font-weight:600;color:var(--ink3);font-family:'Inter',monospace;background:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.6);border-radius:4px;padding:1px 5px;margin-right:4px;letter-spacing:0.02em;flex-shrink:0;}
 
 /* Actions */
@@ -614,7 +615,7 @@ body{
         <div class="acc-right">
           <div class="tr-btns" id="tr-switcher" onclick="event.stopPropagation()">
             <button class="tr-btn on" onclick="setTrLang('translated',this)">Translated</button>
-            <button class="tr-btn" onclick="setTrLang('ja',this)" id="tr-btn-original">Original</button>
+            <button class="tr-btn" onclick="setTrLang('original',this)" id="tr-btn-original">Original</button>
             <button class="tr-btn" onclick="setTrLang('both',this)">Both</button>
           </div>
           <span class="acc-arrow">▼</span>
@@ -632,7 +633,7 @@ body{
 </div>
 
 <script>
-let file=null,data=null,trLang='translated';
+let file=null,data=null,trLang='translated',sourceLang=null;
 const COLORS=['#4a5068','#5a4868','#486858','#685848','#485868','#584848'];
 
 function goLanding(){showPage('page-landing');}
@@ -831,13 +832,16 @@ async function run(){
     setStep('an','done');
 
     data=anData;
-  // Update the "Original" transcript tab label to match the detected language
-  const origBtn = document.getElementById('tr-btn-original');
-  if(origBtn && trData.detectedLanguage){
-    const langName = trData.detectedLanguage.charAt(0).toUpperCase() + trData.detectedLanguage.slice(1);
-    origBtn.textContent = langName;
-  }
+  sourceLang = trData.detectedLanguage || null;
   render(anData,document.getElementById('show-tr').checked);
+  // Update button label after render so data is in place
+  const origBtn = document.getElementById('tr-btn-original');
+  const detectedName = anData?._meta?.sourceLang || sourceLang || null;
+  if(origBtn && detectedName && detectedName !== 'the original language'){
+    origBtn.textContent = detectedName;
+  } else if(origBtn){
+    origBtn.textContent = 'Original';
+  }
   }catch(e){
     // Mark the active step as failed — stays on progress page so user can see exactly where it broke
     ['read','tr','an'].forEach(id=>{
@@ -879,20 +883,45 @@ function render(d,showTr){
   } else trEl.style.display='none';
 }
 
+function buildBothTranscript(translated, original){
+  // Interleave translated and original lines by matching timestamps
+  const tLines = (translated||'').split('\n').filter(l=>l.trim());
+  const oLines = (original||'').split('\n').filter(l=>l.trim());
+  // Simple zip — pair lines positionally since they share the same segments
+  const len = Math.max(tLines.length, oLines.length);
+  const out = [];
+  for(let i=0; i<len; i++){
+    if(oLines[i]) out.push(oLines[i] + ' [orig]');
+    if(tLines[i]) out.push(tLines[i]);
+    if(i < len-1) out.push('');
+  }
+  return out.join('\n');
+}
+
 function renderTr(lang){
   trLang=lang;const tr=data?.transcripts;if(!tr)return;
-  const src=tr[lang]||tr['translated']||'';
-  document.getElementById('tr-body').innerHTML=src.split('\n').filter(l=>l.trim()).map(l=>{
-    const isJp=l.includes('- JP]:') || l.includes('-JP]:');
-    // Match: [M:SS] [Speaker]: text  OR  [Speaker]: text
-    const mTs=l.match(/^(\[\d+:\d+\])\s*\[(.+?)\]:\s*(.+)$/);
-    const mPlain=l.match(/^\[(.+?)\]:\s*(.+)$/);
-    if(mTs){
-      return `<div class="tr-line${isJp?' jp':''}"><span class="tr-ts">${esc(mTs[1])}</span> ${isJp?'':'<strong>'}${esc(mTs[2])}:${isJp?'':'</strong>'} ${esc(mTs[3])}</div>`;
-    } else if(mPlain){
-      return `<div class="tr-line${isJp?' jp':''}">${isJp?'':'<strong>'}${esc(mPlain[1])}:${isJp?'':'</strong>'} ${esc(mPlain[2])}</div>`;
-    }
-    return `<div class="tr-line${isJp?' jp':''}">${esc(l)}</div>`;
+  let src;
+  if(lang==='both'){
+    src = buildBothTranscript(tr.translated, tr.original);
+  } else if(lang==='original'){
+    src = tr.original||tr.translated||'';
+  } else {
+    src = tr.translated||'';
+  }
+  if(!src||!src.trim()){
+    document.getElementById('tr-body').innerHTML='<div style="font-size:13px;color:var(--ink3);font-style:italic;padding:8px 0;">No transcript available for this view.</div>';
+    return;
+  }
+  document.getElementById('tr-body').innerHTML=src.split('\n').map(l=>{
+    if(!l.trim()) return '<div class="tr-gap"></div>';
+    const isOrig = l.endsWith(' [orig]');
+    const clean  = isOrig ? l.slice(0,-7) : l;
+    const mTs    = clean.match(/^(\[\d+:\d+\])\s*\[(.+?)\]:\s*(.+)$/);
+    const mPlain = clean.match(/^\[(.+?)\]:\s*(.+)$/);
+    const cls    = 'tr-line' + (isOrig?' orig':'');
+    if(mTs)    return `<div class="${cls}"><span class="tr-ts">${esc(mTs[1])}</span> ${isOrig?'':'<strong>'}${esc(mTs[2])}:${isOrig?'':'</strong>'} ${esc(mTs[3])}</div>`;
+    if(mPlain) return `<div class="${cls}">${isOrig?'':'<strong>'}${esc(mPlain[1])}:${isOrig?'':'</strong>'} ${esc(mPlain[2])}</div>`;
+    return `<div class="${cls}">${esc(clean)}</div>`;
   }).join('');
 }
 function setTrLang(lang,el){document.querySelectorAll('.tr-btn').forEach(b=>b.classList.remove('on'));el.classList.add('on');renderTr(lang);}
