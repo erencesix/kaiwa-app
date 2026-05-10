@@ -1,0 +1,11 @@
+[build]
+  publish = "public"
+  edge_functions = "netlify/edge-functions"
+
+[[edge_functions]]
+  path = "/api/analyze"
+  function = "analyze"
+
+[[edge_functions]]
+  path = "/api/transcribe"
+  function = "transcribe"

@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kaiwa</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --g1:#d4dff7;--g2:#ccd6f4;--g3:#dde5f8;--g4:#e8edf8;--g5:#f0f3fa;
+  --ink:#0d0f1a;--ink2:#2d3050;--ink3:#6b7099;
+  --glass:rgba(255,255,255,0.45);
+  --glass2:rgba(255,255,255,0.3);
+  --glass3:rgba(255,255,255,0.6);
+  --gb:rgba(255,255,255,0.7);
+  --blur:blur(24px) saturate(180%);
+  --shadow:0 8px 32px rgba(20,30,80,0.12),0 1px 0 rgba(255,255,255,0.8) inset;
+  --shadow-lg:0 20px 60px rgba(20,30,80,0.18),0 1px 0 rgba(255,255,255,0.8) inset;
+  --r:20px;--r-sm:14px;--r-xs:9px;
+}
+html,body{height:100%;overflow-x:hidden;}
+body{
+  font-family:'Inter',sans-serif;color:var(--ink);
+  background:
+    radial-gradient(ellipse 90% 70% at 15% -10%,rgba(160,185,255,0.5) 0%,transparent 55%),
+    radial-gradient(ellipse 70% 60% at 85% 5%,rgba(180,200,255,0.4) 0%,transparent 50%),
+    radial-gradient(ellipse 60% 50% at 50% 110%,rgba(190,210,255,0.35) 0%,transparent 55%),
+    radial-gradient(ellipse 40% 40% at 5% 70%,rgba(200,215,255,0.3) 0%,transparent 50%),
+    linear-gradient(150deg,#c8d8f8 0%,#d8e4f8 25%,#e4ecf8 55%,#dde8f8 80%,#ccd8f5 100%);
+  background-attachment:fixed;
+  min-height:100vh;
+}
+
+/* Floating orbs */
+.orbs{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.orb{position:absolute;border-radius:50%;filter:blur(70px);animation:drift 20s ease-in-out infinite;}
+.orb1{width:600px;height:600px;background:radial-gradient(circle,rgba(150,180,255,0.25),transparent 70%);top:-200px;left:-150px;animation-delay:0s;}
+.orb2{width:500px;height:500px;background:radial-gradient(circle,rgba(180,200,255,0.2),transparent 70%);bottom:-100px;right:-100px;animation-delay:-7s;}
+.orb3{width:350px;height:350px;background:radial-gradient(circle,rgba(200,215,255,0.18),transparent 70%);top:40%;left:55%;animation-delay:-14s;}
+@keyframes drift{0%,100%{transform:translate(0,0);}33%{transform:translate(30px,-20px);}66%{transform:translate(-20px,30px);}}
+
+/* Glass mixin helper */
+.glass{
+  background:var(--glass);
+  backdrop-filter:var(--blur);
+  -webkit-backdrop-filter:var(--blur);
+  border:1px solid var(--gb);
+  box-shadow:var(--shadow);
+}
+
+/* Pages */
+.page{display:none;flex-direction:column;position:relative;z-index:1;min-height:100vh;}
+.page.on{display:flex;}
+
+/* ─── NAV ─── */
+.nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1rem 2rem;
+  background:rgba(255,255,255,0.3);
+  backdrop-filter:blur(20px) saturate(180%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  border-bottom:1px solid rgba(255,255,255,0.5);
+  position:sticky;top:0;z-index:100;
+}
+.logo{display:flex;align-items:center;gap:10px;cursor:pointer;}
+.logo-mark{
+  width:34px;height:34px;border-radius:10px;
+  background:linear-gradient(135deg,rgba(40,50,120,0.85),rgba(60,80,160,0.75));
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,0.4);
+  box-shadow:0 2px 10px rgba(40,60,160,0.25),0 1px 0 rgba(255,255,255,0.3) inset;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;color:rgba(255,255,255,0.95);font-weight:800;letter-spacing:-0.03em;
+}
+.logo-name{font-size:16px;font-weight:800;letter-spacing:-0.04em;color:var(--ink);}
+.nav-right{display:flex;align-items:center;gap:12px;}
+.nav-tag{font-size:11px;color:var(--ink3);letter-spacing:0.03em;}
+.nav-btn{
+  font-family:'Inter',sans-serif;font-size:13px;font-weight:600;letter-spacing:-0.02em;
+  background:linear-gradient(135deg,rgba(30,40,110,0.82),rgba(50,70,160,0.75));
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  color:rgba(255,255,255,0.93);border:1px solid rgba(255,255,255,0.25);
+  border-radius:var(--r-xs);padding:8px 18px;cursor:pointer;
+  box-shadow:0 3px 14px rgba(40,60,160,0.25),0 1px 0 rgba(255,255,255,0.2) inset;
+  transition:all 0.2s;
+}
+.nav-btn:hover{box-shadow:0 5px 20px rgba(40,60,160,0.35),0 1px 0 rgba(255,255,255,0.2) inset;transform:translateY(-1px);}
+
+/* ─── LANDING ─── */
+#page-landing{justify-content:space-between;}
+
+.land-hero{
+  flex:1;display:flex;flex-direction:column;
+  padding:4rem 2rem 2rem;align-items:center;justify-content:center;text-align:center;
+  gap:2rem;
+}
+.land-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,0.45);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,0.7);
+  border-radius:99px;padding:6px 16px;
+  font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--ink2);
+  box-shadow:0 2px 10px rgba(40,60,160,0.1),0 1px 0 rgba(255,255,255,0.8) inset;
+}
+.land-h1{
+  font-size:clamp(3.2rem,7vw,6rem);
+  font-weight:900;letter-spacing:-0.06em;line-height:0.95;
+  color:var(--ink);
+}
+.land-h1 em{font-style:italic;font-weight:200;color:var(--ink2);}
+.land-sub{
+  font-size:16px;color:var(--ink2);line-height:1.75;
+  max-width:480px;font-weight:300;
+}
+.land-cta{
+  font-family:'Inter',sans-serif;font-size:15px;font-weight:700;letter-spacing:-0.02em;
+  background:linear-gradient(135deg,rgba(25,35,100,0.88),rgba(45,65,150,0.8));
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  color:rgba(255,255,255,0.95);border:1px solid rgba(255,255,255,0.3);
+  border-radius:var(--r-sm);padding:15px 36px;cursor:pointer;
+  box-shadow:0 8px 30px rgba(30,50,160,0.3),0 1px 0 rgba(255,255,255,0.2) inset;
+  transition:all 0.25s;display:inline-flex;align-items:center;gap:10px;
+}
+.land-cta:hover{box-shadow:0 12px 40px rgba(30,50,160,0.4),0 1px 0 rgba(255,255,255,0.2) inset;transform:translateY(-2px);}
+.land-cta:active{transform:scale(0.98);}
+
+/* Feature cards strip */
+.land-cards{
+  display:flex;gap:12px;padding:2rem;
+  overflow-x:auto;
+}
+.land-cards::-webkit-scrollbar{display:none;}
+.feat-card{
+  flex-shrink:0;width:260px;
+  background:rgba(255,255,255,0.38);
+  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  border:1px solid rgba(255,255,255,0.72);
+  border-radius:var(--r);
+  padding:1.5rem;
+  box-shadow:0 6px 24px rgba(20,40,120,0.1),0 1px 0 rgba(255,255,255,0.85) inset;
+  transition:all 0.25s;
+}
+.feat-card:hover{background:rgba(255,255,255,0.52);transform:translateY(-3px);box-shadow:0 12px 36px rgba(20,40,120,0.15),0 1px 0 rgba(255,255,255,0.9) inset;}
+.feat-num{font-size:11px;font-weight:700;letter-spacing:0.1em;color:var(--ink3);margin-bottom:12px;}
+.feat-card h3{font-size:16px;font-weight:700;letter-spacing:-0.03em;margin-bottom:8px;}
+.feat-card p{font-size:12px;color:var(--ink2);line-height:1.7;font-weight:300;}
+
+/* ─── UPLOAD ─── */
+#page-upload{min-height:100vh;}
+.up-wrap{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:2rem;gap:1.5rem;
+}
+.up-header{text-align:center;margin-bottom:0.5rem;}
+.up-header h2{font-size:2rem;font-weight:800;letter-spacing:-0.05em;margin-bottom:6px;}
+.up-header p{font-size:14px;color:var(--ink2);font-weight:300;}
+
+/* Main upload glass card */
+.up-card{
+  width:100%;max-width:680px;
+  background:rgba(255,255,255,0.42);
+  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  border:1px solid rgba(255,255,255,0.75);
+  border-radius:var(--r);
+  box-shadow:var(--shadow-lg);
+  overflow:hidden;
+}
+.up-drop{
+  padding:2.5rem 2rem;
+  border-bottom:1px solid rgba(255,255,255,0.5);
+  cursor:pointer;position:relative;
+  display:flex;align-items:center;gap:1.5rem;
+  transition:all 0.2s;
+}
+.up-drop:hover,.up-drop.over{
+  background:rgba(255,255,255,0.25);
+}
+.up-drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.dz-ic{
+  width:56px;height:56px;border-radius:16px;flex-shrink:0;
+  background:linear-gradient(135deg,rgba(255,255,255,0.7),rgba(220,230,255,0.5));
+  border:1px solid rgba(255,255,255,0.85);
+  box-shadow:0 4px 14px rgba(40,60,160,0.12),0 1px 0 rgba(255,255,255,0.9) inset;
+  display:flex;align-items:center;justify-content:center;font-size:1.6rem;
+}
+.dz-text h3{font-size:15px;font-weight:600;letter-spacing:-0.02em;margin-bottom:4px;}
+.dz-text p{font-size:12px;color:var(--ink2);margin-bottom:10px;font-weight:300;}
+.dz-types{display:flex;gap:4px;flex-wrap:wrap;}
+.dz-types span{
+  font-size:9px;font-weight:700;letter-spacing:0.05em;color:var(--ink3);
+  background:rgba(255,255,255,0.55);border:1px solid rgba(255,255,255,0.75);
+  padding:3px 8px;border-radius:5px;
+}
+.file-pill{
+  display:none;align-items:center;gap:12px;
+  background:rgba(255,255,255,0.5);
+  border:1px solid rgba(255,255,255,0.75);
+  border-radius:var(--r-sm);padding:12px 16px;
+  margin:0 1.5rem;
+}
+.file-pill.on{display:flex;}
+.fp-ic{font-size:1.3rem;}
+.fp-info{flex:1;min-width:0;}
+.fp-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fp-size{font-size:11px;color:var(--ink3);margin-top:1px;}
+.fp-rm{
+  background:rgba(0,0,0,0.05);border:1px solid rgba(0,0,0,0.08);
+  border-radius:6px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--ink3);font-size:12px;transition:all 0.15s;flex-shrink:0;
+}
+.fp-rm:hover{background:rgba(200,60,60,0.12);border-color:rgba(200,60,60,0.2);color:#a03030;}
+
+/* Controls inside card */
+.up-controls{
+  padding:1.5rem 2rem;
+  display:flex;flex-direction:column;gap:1.2rem;
+}
+.ctrl-row-h{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;}
+.ctrl-grp{display:flex;flex-direction:column;gap:6px;flex:1;}
+.ctrl-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink3);}
+.glass-select{
+  background:rgba(255,255,255,0.55);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,0.8);
+  box-shadow:0 2px 8px rgba(40,60,160,0.08),0 1px 0 rgba(255,255,255,0.9) inset;
+  color:var(--ink);font-family:'Inter',sans-serif;font-size:13px;font-weight:500;
+  padding:10px 32px 10px 13px;border-radius:var(--r-xs);outline:none;cursor:pointer;
+  appearance:none;width:100%;transition:all 0.15s;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%236b7099' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;
+}
+.glass-select:focus{border-color:rgba(80,100,200,0.4);box-shadow:0 0 0 3px rgba(80,100,200,0.1),0 2px 8px rgba(40,60,160,0.08);}
+.tog-wrap{display:flex;align-items:center;gap:8px;}
+.tog{position:relative;width:38px;height:22px;flex-shrink:0;}
+.tog input{opacity:0;width:0;height:0;}
+.tog-sl{
+  position:absolute;inset:0;
+  background:rgba(0,0,0,0.12);border:1px solid rgba(255,255,255,0.5);
+  border-radius:99px;cursor:pointer;transition:0.2s;
+}
+.tog-sl::before{content:'';position:absolute;width:15px;height:15px;left:3px;top:3px;background:#fff;border-radius:50%;transition:0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.2);}
+.tog input:checked+.tog-sl{background:rgba(40,60,160,0.55);border-color:rgba(100,130,220,0.4);}
+.tog input:checked+.tog-sl::before{transform:translateX(16px);}
+.tog-lbl{font-size:13px;color:var(--ink2);font-weight:400;}
+
+.go-btn{
+  font-family:'Inter',sans-serif;font-size:14px;font-weight:700;letter-spacing:-0.02em;
+  background:linear-gradient(135deg,rgba(25,35,100,0.88),rgba(45,65,150,0.8));
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  color:rgba(255,255,255,0.95);border:1px solid rgba(255,255,255,0.25);
+  border-radius:var(--r-xs);padding:13px 20px;cursor:pointer;width:100%;
+  box-shadow:0 6px 24px rgba(30,50,160,0.28),0 1px 0 rgba(255,255,255,0.2) inset;
+  transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.go-btn:hover:not(:disabled){box-shadow:0 10px 32px rgba(30,50,160,0.38),0 1px 0 rgba(255,255,255,0.2) inset;transform:translateY(-1px);}
+.go-btn:disabled{opacity:0.3;cursor:not-allowed;transform:none;}
+
+.err-box{
+  display:none;font-size:12px;color:#7a2020;
+  background:rgba(255,220,220,0.6);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(220,150,150,0.4);border-radius:var(--r-xs);padding:10px 13px;
+  margin:0 1.5rem 1rem;
+}
+.err-box.on{display:block;}
+
+/* ─── PROGRESS ─── */
+#page-prog{align-items:center;justify-content:center;}
+.prog-box{
+  width:100%;max-width:480px;padding:2rem;
+  text-align:center;display:flex;flex-direction:column;gap:1.5rem;align-items:center;
+}
+.prog-box h2{font-size:2rem;font-weight:800;letter-spacing:-0.05em;}
+.prog-box p{font-size:14px;color:var(--ink2);font-weight:300;}
+.prog-steps{width:100%;display:flex;flex-direction:column;gap:8px;}
+.p-step{
+  display:flex;align-items:center;gap:14px;
+  background:rgba(255,255,255,0.38);
+  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  border:1px solid rgba(255,255,255,0.7);
+  border-radius:var(--r-sm);padding:14px 18px;transition:all 0.3s;
+  box-shadow:0 2px 10px rgba(20,40,120,0.07),0 1px 0 rgba(255,255,255,0.8) inset;
+}
+.p-step.active{background:rgba(255,255,255,0.6);border-color:rgba(100,130,220,0.4);box-shadow:0 4px 20px rgba(40,70,200,0.15),0 1px 0 rgba(255,255,255,0.9) inset;}
+.p-step.done{background:rgba(220,255,235,0.55);border-color:rgba(80,180,120,0.3);}
+.p-step.err{background:rgba(255,220,220,0.55);border-color:rgba(200,80,80,0.3);}
+.p-ic{font-size:1.1rem;width:22px;text-align:center;flex-shrink:0;}
+.p-txt{flex:1;text-align:left;}
+.p-title{font-size:13px;font-weight:500;}
+.p-desc{font-size:11px;color:var(--ink3);margin-top:2px;}
+.p-st{font-size:13px;flex-shrink:0;width:20px;text-align:center;color:var(--ink3);}
+.spin{width:16px;height:16px;border:2px solid rgba(80,100,200,0.2);border-top-color:rgba(40,60,160,0.7);border-radius:50%;animation:spin 0.65s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ─── RESULTS ─── */
+#page-res{min-height:100vh;}
+.res-bar{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:0.9rem 2rem;
+  background:rgba(255,255,255,0.3);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(255,255,255,0.5);
+  position:sticky;top:57px;z-index:50;
+}
+.res-bar-title{font-size:13px;font-weight:700;letter-spacing:-0.02em;}
+.sp-chips{display:flex;gap:6px;flex-wrap:wrap;flex:1;}
+.sp-chip{
+  display:flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,0.5);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,0.75);
+  border-radius:var(--r-sm);padding:5px 12px;
+  box-shadow:0 1px 6px rgba(20,40,120,0.08);
+}
+.sp-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,0.2);}
+.sp-name{font-size:12px;font-weight:600;}
+.sp-role{font-size:10px;color:var(--ink3);}
+.back-btn{
+  font-family:'Inter',sans-serif;font-size:12px;font-weight:500;
+  background:rgba(255,255,255,0.45);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,0.75);border-radius:var(--r-xs);
+  padding:7px 14px;cursor:pointer;color:var(--ink2);transition:all 0.15s;
+}
+.back-btn:hover{background:rgba(255,255,255,0.65);}
+
+/* Accordion */
+.res-body{
+  padding:2rem;display:flex;flex-direction:column;gap:10px;
+  max-width:780px;width:100%;margin:0 auto;
+}
+.acc{
+  background:rgba(255,255,255,0.38);
+  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  border:1px solid rgba(255,255,255,0.72);
+  border-radius:var(--r-sm);
+  box-shadow:0 4px 16px rgba(20,40,120,0.09),0 1px 0 rgba(255,255,255,0.85) inset;
+  overflow:hidden;transition:all 0.25s;
+}
+.acc:hover{box-shadow:0 6px 24px rgba(20,40,120,0.13),0 1px 0 rgba(255,255,255,0.9) inset;}
+.acc.open{background:rgba(255,255,255,0.52);box-shadow:0 8px 32px rgba(20,40,120,0.14),0 1px 0 rgba(255,255,255,0.95) inset;}
+.acc-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:15px 20px;cursor:pointer;user-select:none;transition:background 0.15s;
+}
+.acc-head:hover{background:rgba(255,255,255,0.2);}
+.acc-left{display:flex;align-items:center;gap:12px;}
+.acc-ic{
+  width:30px;height:30px;border-radius:8px;flex-shrink:0;
+  background:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.85);
+  box-shadow:0 2px 6px rgba(20,40,120,0.1),0 1px 0 rgba(255,255,255,0.9) inset;
+  display:flex;align-items:center;justify-content:center;font-size:13px;
+}
+.acc-title{font-size:14px;font-weight:600;letter-spacing:-0.02em;}
+.acc-badge{
+  font-size:10px;font-weight:700;color:var(--ink3);
+  background:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.7);
+  padding:2px 8px;border-radius:99px;
+}
+.acc-right{display:flex;align-items:center;gap:8px;}
+.acc-arrow{font-size:9px;color:var(--ink3);transition:transform 0.25s;display:inline-block;}
+.acc.open .acc-arrow{transform:rotate(180deg);}
+.acc-body{
+  display:none;
+  border-top:1px solid rgba(255,255,255,0.5);
+  padding:16px 20px;
+  animation:slideIn 0.18s ease;
+}
+.acc.open .acc-body{display:block;}
+@keyframes slideIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
+
+/* Content */
+.bul-list{display:flex;flex-direction:column;gap:14px;}
+.bul-item{}
+.bul-main{font-size:13px;font-weight:600;line-height:1.5;margin-bottom:5px;display:flex;gap:9px;align-items:flex-start;}
+.bul-main::before{content:'●';font-size:6px;color:var(--ink3);flex-shrink:0;margin-top:4px;}
+.bul-subs{padding-left:14px;display:flex;flex-direction:column;gap:3px;}
+.bul-sub{font-size:12px;color:var(--ink2);line-height:1.7;display:flex;gap:7px;font-weight:300;}
+.bul-sub::before{content:'–';color:var(--ink3);flex-shrink:0;}
+
+.kp-list{display:flex;flex-direction:column;gap:8px;}
+.kp-item{
+  background:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.65);
+  border-radius:var(--r-xs);padding:10px 13px;
+}
+.kp-main{font-size:13px;font-weight:500;line-height:1.5;margin-bottom:3px;display:flex;gap:8px;}
+.kp-main::before{content:'→';color:var(--ink3);flex-shrink:0;}
+.kp-subs{padding-left:16px;display:flex;flex-direction:column;gap:2px;}
+.kp-sub{font-size:11px;color:var(--ink2);line-height:1.6;display:flex;gap:6px;font-weight:300;}
+.kp-sub::before{content:'·';color:var(--ink3);}
+
+.hl-list{display:flex;flex-direction:column;gap:8px;}
+.hl{
+  background:rgba(255,255,255,0.4);
+  border:1px solid rgba(255,255,255,0.65);
+  border-left:2.5px solid rgba(60,80,180,0.35);
+  border-radius:0 var(--r-xs) var(--r-xs) 0;padding:11px 14px;
+}
+.hl-sp{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink3);margin-bottom:5px;}
+.hl-q{font-size:13px;font-style:italic;line-height:1.6;margin-bottom:5px;font-weight:300;}
+.hl-ctx{font-size:11px;color:var(--ink2);line-height:1.5;font-weight:300;}
+
+.ch-list{display:flex;flex-direction:column;}
+.ch{padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.4);}
+.ch:last-child{border-bottom:none;}
+.ch-hd{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.ch-n{width:20px;height:20px;border-radius:5px;background:rgba(255,255,255,0.55);border:1px solid rgba(255,255,255,0.7);font-size:9px;font-weight:700;color:var(--ink3);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ch-title{font-size:13px;font-weight:600;letter-spacing:-0.01em;}
+.ch-time{margin-left:auto;font-size:10px;color:var(--ink3);background:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.7);padding:2px 8px;border-radius:4px;white-space:nowrap;}
+.ch-body{font-size:12px;color:var(--ink2);line-height:1.7;padding-left:28px;font-weight:300;}
+
+.tr-btns{display:flex;gap:3px;}
+.tr-btn{
+  font-family:'Inter',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.04em;
+  padding:4px 10px;border-radius:6px;
+  background:rgba(255,255,255,0.3);border:1px solid rgba(255,255,255,0.55);
+  color:var(--ink3);cursor:pointer;transition:all 0.15s;
+}
+.tr-btn:hover{background:rgba(255,255,255,0.5);}
+.tr-btn.on{background:rgba(255,255,255,0.7);border-color:rgba(255,255,255,0.85);color:var(--ink);box-shadow:0 1px 4px rgba(20,40,120,0.1);}
+.tr-body{display:none;}
+.tr-body.on{display:block;}
+.tr-line{font-size:12px;line-height:2.1;color:var(--ink2);font-weight:300;display:flex;align-items:baseline;gap:2px;}
+.tr-line strong{color:var(--ink);font-weight:500;}
+.tr-line.jp{font-size:11px;color:var(--ink3);line-height:1.7;}
+.tr-ts{font-size:10px;font-weight:600;color:var(--ink3);font-family:'Inter',monospace;background:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.6);border-radius:4px;padding:1px 5px;margin-right:4px;letter-spacing:0.02em;flex-shrink:0;}
+
+/* Actions */
+.act-row{display:flex;gap:8px;padding:0 0 1rem;}
+.act-btn{
+  font-family:'Inter',sans-serif;font-size:12px;font-weight:600;letter-spacing:-0.01em;
+  background:rgba(255,255,255,0.45);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,0.72);border-radius:var(--r-xs);
+  padding:9px 18px;cursor:pointer;color:var(--ink2);transition:all 0.15s;
+  box-shadow:0 2px 8px rgba(20,40,120,0.08),0 1px 0 rgba(255,255,255,0.8) inset;
+}
+.act-btn:hover{background:rgba(255,255,255,0.65);color:var(--ink);box-shadow:0 4px 14px rgba(20,40,120,0.12),0 1px 0 rgba(255,255,255,0.9) inset;}
+.act-btn.ok{color:#2a6a44;border-color:rgba(80,180,120,0.4);}
+
+@media(max-width:640px){
+  .land-h1{font-size:3rem;}
+  .land-cards{padding:1.5rem 1rem;}
+  .res-body,.up-wrap{padding:1rem;}
+  .up-card{border-radius:var(--r-sm);}
+}
+</style>
+</head>
+<body>
+<div class="orbs"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="logo" onclick="goLanding()">
+    <div class="logo-mark">会</div>
+    <div class="logo-name">Kaiwa</div>
+  </div>
+  <div class="nav-right">
+    <span class="nav-tag">Multilingual Meeting Intelligence</span>
+    <button class="nav-btn" onclick="goUpload()">Get started →</button>
+  </div>
+</nav>
+
+<!-- ─── LANDING ─── -->
+<div class="page on" id="page-landing">
+  <div class="land-hero">
+    <div class="land-eyebrow">Multilingual Meeting Intelligence</div>
+    <div style="display:flex;align-items:center;gap:20px;justify-content:center;margin-bottom:1rem;">
+      <div style="width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,rgba(40,50,120,0.85),rgba(60,80,160,0.75));backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.4);box-shadow:0 4px 20px rgba(40,60,160,0.3),0 1px 0 rgba(255,255,255,0.3) inset;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;color:rgba(255,255,255,0.95);font-family:'Inter',sans-serif;letter-spacing:-0.04em;">会</div>
+      <h1 class="land-h1" style="font-size:clamp(4rem,10vw,8rem);margin-bottom:0;">Kaiwa</h1>
+    </div>
+    <p class="land-sub">Upload any meeting recording and get a translated transcript, speaker breakdown, structured summary, key points and highlights — in minutes.</p>
+    <button class="land-cta" onclick="goUpload()">Analyze a meeting <span style="font-size:18px;line-height:1;">→</span></button>
+  </div>
+  <div class="land-cards" style="justify-content:center;flex-wrap:wrap;">
+    <div class="feat-card">
+      <div class="feat-num">01 — Transcription</div>
+      <h3>Whisper-powered speech recognition</h3>
+      <p>Accurate speech-to-text across Japanese, English, Indonesian, and more. Handles accents, cross-talk, and mixed-language conversations automatically.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-num">02 — Speakers</div>
+      <h3>Automatic speaker detection</h3>
+      <p>Each participant is identified and labeled automatically. Names are pulled from introductions and conversational context — no setup needed.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-num">03 — Analysis</div>
+      <h3>Chapter-divided intelligence</h3>
+      <p>A full structured report: bullet summaries, key points with sub-details, highlight quotes, timeline chapters, and a translated transcript.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-num">04 — Language</div>
+      <h3>Indonesian, English, or both</h3>
+      <p>Pick your output language before analyzing. Every part of the report — summary, transcript, highlights — comes in the language you choose.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ─── UPLOAD ─── -->
+<div class="page" id="page-upload">
+  <div class="up-wrap">
+    <div class="up-header">
+      <h2>Transcribe a meeting</h2>
+      <p>Drop any meeting recording and hit analyze.</p>
+    </div>
+
+    <div class="up-card">
+      <div class="up-drop" id="drop-zone">
+        <input type="file" id="file-in" accept="audio/*,video/*,.mp3,.mp4,.wav,.m4a,.ogg,.webm,.mov"/>
+        <div class="dz-ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:#6b7099"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg></div>
+        <div class="dz-text">
+          <h3>Drop your meeting recording here</h3>
+          <p>Any language · Up to 200MB · or click to browse</p>
+          <div class="dz-types"><span>MP3</span><span>MP4</span><span>WAV</span><span>M4A</span><span>OGG</span><span>WEBM</span><span>MOV</span></div>
+        </div>
+      </div>
+
+      <div class="file-pill" id="file-pill" style="margin:1rem 1.5rem 0;">
+        <div class="fp-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:#6b7099"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
+        <div class="fp-info">
+          <div class="fp-name" id="fname"></div>
+          <div class="fp-size" id="fsize"></div>
+        </div>
+        <button class="fp-rm" onclick="rmFile()">✕</button>
+      </div>
+
+      <div class="err-box" id="err-box"></div>
+
+      <div class="up-controls">
+        <div class="ctrl-row-h">
+          <div class="ctrl-grp">
+            <div class="ctrl-lbl">Output language</div>
+            <select class="glass-select" id="lang">
+              <option value="id">🇮🇩 Indonesian</option>
+              <option value="en">🇬🇧 English</option>
+              <option value="both">🇮🇩 + 🇬🇧 Both</option>
+            </select>
+          </div>
+          <div class="ctrl-grp" style="justify-content:flex-end;padding-top:22px;">
+            <div class="tog-wrap">
+              <label class="tog"><input type="checkbox" id="show-tr" checked/><span class="tog-sl"></span></label>
+              <span class="tog-lbl">Include transcript</span>
+            </div>
+          </div>
+        </div>
+        <button class="go-btn" id="go-btn" onclick="run()" disabled>Analyze Meeting</button>
+      </div>
+    </div>
+
+    <button class="back-btn" onclick="goLanding()" style="margin-top:0.5rem;">← Back to home</button>
+  </div>
+</div>
+
+<!-- ─── PROGRESS ─── -->
+<div class="page" id="page-prog">
+  <div class="prog-box">
+    <div>
+      <h2>Analyzing<br>your meeting</h2>
+      <p style="margin-top:8px;">This may take a minute for longer recordings.</p>
+    </div>
+    <div class="prog-steps">
+      <div class="p-step" id="ps-read"><div class="p-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:#6b7099"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div><div class="p-txt"><div class="p-title">Ready</div><div class="p-desc">File loaded</div></div><div class="p-st" id="pss-read">–</div></div>
+      <div class="p-step" id="ps-tr"><div class="p-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:#6b7099"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></div><div class="p-txt"><div class="p-title">Transcribing audio</div><div class="p-desc">Whisper AI — speech to text</div></div><div class="p-st" id="pss-tr">–</div></div>
+      <div class="p-step" id="ps-an"><div class="p-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:#6b7099"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg></div><div class="p-txt"><div class="p-title">Translating & analyzing</div><div class="p-desc">Building your report</div></div><div class="p-st" id="pss-an">–</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── RESULTS ─── -->
+<div class="page" id="page-res">
+  <div class="res-bar">
+    <span class="res-bar-title">Analysis complete</span>
+    <div class="sp-chips" id="sp-chips"></div>
+    <button class="back-btn" onclick="goUpload()">← New meeting</button>
+  </div>
+  <div class="res-body">
+
+    <div class="acc open" id="acc-summary">
+      <div class="acc-head" onclick="togAcc('acc-summary')">
+        <div class="acc-left"><div class="acc-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#6b7099"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div><span class="acc-title">Summary</span><span class="acc-badge" id="sum-count"></span></div>
+        <div class="acc-right"><span class="acc-arrow">▼</span></div>
+      </div>
+      <div class="acc-body"><div class="bul-list" id="sum-list"></div></div>
+    </div>
+
+    <div class="acc" id="acc-kp">
+      <div class="acc-head" onclick="togAcc('acc-kp')">
+        <div class="acc-left"><div class="acc-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#6b7099"><polyline points="9 18 15 12 9 6"/></svg></div><span class="acc-title">Key Points</span><span class="acc-badge" id="kp-count"></span></div>
+        <div class="acc-right"><span class="acc-arrow">▼</span></div>
+      </div>
+      <div class="acc-body"><div class="kp-list" id="kp-list"></div></div>
+    </div>
+
+    <div class="acc" id="acc-hl">
+      <div class="acc-head" onclick="togAcc('acc-hl')">
+        <div class="acc-left"><div class="acc-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#6b7099"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><span class="acc-title">Highlights</span><span class="acc-badge" id="hl-count"></span></div>
+        <div class="acc-right"><span class="acc-arrow">▼</span></div>
+      </div>
+      <div class="acc-body"><div class="hl-list" id="hl-list"></div></div>
+    </div>
+
+    <div class="acc" id="acc-ch">
+      <div class="acc-head" onclick="togAcc('acc-ch')">
+        <div class="acc-left"><div class="acc-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#6b7099"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div><span class="acc-title">Chapters</span><span class="acc-badge" id="ch-count"></span></div>
+        <div class="acc-right"><span class="acc-arrow">▼</span></div>
+      </div>
+      <div class="acc-body"><div class="ch-list" id="ch-list"></div></div>
+    </div>
+
+    <div class="acc" id="acc-tr" style="display:none;">
+      <div class="acc-head" onclick="togAcc('acc-tr')">
+        <div class="acc-left"><div class="acc-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#6b7099"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><span class="acc-title">Transcript</span></div>
+        <div class="acc-right">
+          <div class="tr-btns" id="tr-switcher" onclick="event.stopPropagation()">
+            <button class="tr-btn on" onclick="setTrLang('translated',this)">Translated</button>
+            <button class="tr-btn" onclick="setTrLang('ja',this)" id="tr-btn-original">Original</button>
+            <button class="tr-btn" onclick="setTrLang('both',this)">Both</button>
+          </div>
+          <span class="acc-arrow">▼</span>
+        </div>
+      </div>
+      <div class="acc-body"><div class="tr-body on" id="tr-body"></div></div>
+    </div>
+
+    <div class="act-row">
+      <button class="act-btn" id="copy-btn" onclick="copySummary()">Copy summary</button>
+      <button class="act-btn" onclick="dlTxt()">Download .txt</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let file=null,data=null,trLang='translated';
+const COLORS=['#4a5068','#5a4868','#486858','#685848','#485868','#584848'];
+
+function goLanding(){showPage('page-landing');}
+function goUpload(){showPage('page-upload');}
+function showPage(id){document.querySelectorAll('.page').forEach(p=>{p.classList.toggle('on',p.id===id);});}
+
+document.getElementById('file-in').addEventListener('change',e=>{if(e.target.files[0])pick(e.target.files[0]);});
+const dz=document.getElementById('drop-zone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('over');if(e.dataTransfer.files[0])pick(e.dataTransfer.files[0]);});
+
+function pick(f){
+  const MAX_MB = 200;
+  const MAX_BYTES = MAX_MB * 1024 * 1024;
+  const ALLOWED_EXT = /\.(mp3|mp4|m4a|wav|ogg|webm|mov|flac)$/i;
+  if(f.size > MAX_BYTES){
+    const err=document.getElementById('err-box');
+    err.textContent='File too large ('+( f.size/1048576).toFixed(1)+' MB). Maximum is 200MB.';
+    err.classList.add('on');
+    return;
+  }
+  if(!ALLOWED_EXT.test(f.name)){
+    const err=document.getElementById('err-box');
+    err.textContent='Unsupported file type. Please upload an audio or video file (MP3, MP4, M4A, WAV, OGG, WEBM, MOV, FLAC).';
+    err.classList.add('on');
+    return;
+  }
+  file=f;
+  document.getElementById('fname').textContent=f.name;
+  document.getElementById('fsize').textContent=f.size<1048576?(f.size/1024).toFixed(1)+' KB':(f.size/1048576).toFixed(1)+' MB';
+  document.getElementById('file-pill').classList.add('on');
+  document.getElementById('go-btn').disabled=false;
+  document.getElementById('err-box').classList.remove('on');
+}
+function rmFile(){file=null;document.getElementById('file-pill').classList.remove('on');document.getElementById('file-in').value='';document.getElementById('go-btn').disabled=true;}
+
+function setStep(id,state){
+  const s=document.getElementById('ps-'+id),ss=document.getElementById('pss-'+id);
+  s.className='p-step'+(state?' '+state:'');
+  if(state==='active')ss.innerHTML='<div class="spin"></div>';
+  else if(state==='done')ss.textContent='✓';
+  else if(state==='err')ss.textContent='✗';
+  else ss.textContent='–';
+}
+
+function showErr(msg){const e=document.getElementById('err-box');e.textContent=msg;e.classList.add('on');showPage('page-upload');}
+
+
+function formatTimeFE(seconds){
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return m + ':' + s.toString().padStart(2,'0');
+}
+
+// Streaming version for /api/analyze — reads GPT-4o tokens in real time via SSE.
+// Uses a proper line buffer so TCP chunk boundaries never split an SSE event.
+async function analyzeStream(body, onProgress) {
+  const res = await fetch('/api/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    let parsed; try { parsed = JSON.parse(text); } catch(e) { parsed = {}; }
+    throw new Error(parsed.error || 'Server error (status ' + res.status + ')');
+  }
+
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let lineBuf = '';
+  let tokenCount = 0;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    lineBuf += dec.decode(value, { stream: true });
+
+    let nl;
+    while ((nl = lineBuf.indexOf('\n')) !== -1) {
+      const line = lineBuf.slice(0, nl).trimEnd();
+      lineBuf = lineBuf.slice(nl + 1);
+      if (!line.startsWith('data: ')) continue;
+      let msg;
+      try { msg = JSON.parse(line.slice(6)); } catch { continue; }
+      if (msg.error) throw new Error(msg.error);
+      if (msg.token) { tokenCount += msg.token.length; onProgress && onProgress(tokenCount); }
+      if (msg.done) return msg.result;
+    }
+  }
+
+  throw new Error('Analysis stream closed unexpectedly — this is usually a network issue. Try again.');
+}
+
+async function transcribeChunked(file){
+  // Audio sent to /api/transcribe — API key never touches the browser.
+  // Chunks at 18MB to stay under Netlify Edge's 20MB body limit.
+  const CHUNK_SIZE = 18 * 1024 * 1024;
+  const MAX_RETRIES = 3;
+  const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+  let allSegments = [];
+  let allText = '';
+  let timeOffset = 0;
+  let detectedLanguage = null;
+
+  for(let i = 0; i < totalChunks; i++){
+    const start = i * CHUNK_SIZE;
+    const end = Math.min(start + CHUNK_SIZE, file.size);
+    const chunk = file.slice(start, end, file.type);
+
+    const descEl = document.querySelector('#ps-tr .p-desc');
+    if(descEl) descEl.textContent = totalChunks > 1
+      ? 'Part ' + (i+1) + ' of ' + totalChunks + '\u2026'
+      : 'Converting speech to text\u2026';
+
+    // Retry loop — transient network errors shouldn't kill the whole job
+    let result = null;
+    let lastErr = null;
+    for(let attempt = 0; attempt < MAX_RETRIES; attempt++){
+      if(attempt > 0){
+        if(descEl) descEl.textContent = 'Retrying part ' + (i+1) + ' (attempt ' + (attempt+1) + ')\u2026';
+        await new Promise(r => setTimeout(r, 1500 * attempt));
+      }
+      try{
+        const fd = new FormData();
+        fd.append('file', new File([chunk], file.name, {type: file.type || 'audio/mpeg'}));
+        const res = await fetch('/api/transcribe', { method: 'POST', body: fd });
+        const text = await res.text();
+        let parsed;
+        try{ parsed = JSON.parse(text); }
+        catch(e){ throw new Error('Unexpected server response: ' + text.substring(0,200)); }
+        if(parsed.error) throw new Error(parsed.error);
+        result = parsed;
+        break;
+      } catch(e){
+        lastErr = e;
+      }
+    }
+    if(!result) throw new Error('Transcription failed after ' + MAX_RETRIES + ' attempts: ' + lastErr?.message);
+
+    if(!result.text) continue;
+
+    // Normalize language string from Whisper (e.g. "japanese", "english")
+    if(!detectedLanguage && result.language){
+      detectedLanguage = result.language.toLowerCase().trim();
+    }
+    allText += (allText ? ' ' : '') + result.text;
+
+    const segs = (result.segments || []).map(s => ({
+      start: s.start + timeOffset,
+      end: s.end + timeOffset,
+      text: s.text.trim(),
+      startFormatted: formatTimeFE(s.start + timeOffset),
+    }));
+    allSegments = allSegments.concat(segs);
+
+    // Advance time offset — use actual segment data when available,
+    // else estimate from byte size assuming ~128kbps compressed audio (MP3/M4A)
+    if(result.segments && result.segments.length > 0){
+      timeOffset += result.segments[result.segments.length - 1].end + 0.1;
+    } else {
+      timeOffset += (end - start) / 16000; // 128kbps = 16000 bytes/sec
+    }
+  }
+
+  return { transcript: allText, segments: allSegments, detectedLanguage };
+}
+
+async function run(){
+  if(!file)return;
+  document.getElementById('err-box').classList.remove('on');
+  showPage('page-prog');
+  const lang=document.getElementById('lang').value;
+
+  try{
+    setStep('read','done');
+
+    setStep('tr','active');
+    const trData = await transcribeChunked(file);
+    if(!trData.transcript) throw new Error('Transcription returned empty. Check the file contains audio.');
+    setStep('tr','done');
+
+    setStep('an','active');
+    const anDescEl = document.querySelector('#ps-an .p-desc');
+    const anData = await analyzeStream({
+      transcript: trData.transcript,
+      segments: trData.segments || [],
+      language: lang,
+      detectedLanguage: trData.detectedLanguage || null
+    }, (chars) => {
+      if (anDescEl) anDescEl.textContent = 'Writing report… ' + Math.round(chars / 10) + ' lines';
+    });
+    if (anDescEl) anDescEl.textContent = 'Done';
+    setStep('an','done');
+
+    data=anData;
+  // Update the "Original" transcript tab label to match the detected language
+  const origBtn = document.getElementById('tr-btn-original');
+  if(origBtn && trData.detectedLanguage){
+    const langName = trData.detectedLanguage.charAt(0).toUpperCase() + trData.detectedLanguage.slice(1);
+    origBtn.textContent = langName;
+  }
+  render(anData,document.getElementById('show-tr').checked);
+  }catch(e){
+    // Mark the active step as failed — stays on progress page so user can see exactly where it broke
+    ['read','tr','an'].forEach(id=>{
+      const el=document.getElementById('ps-'+id);
+      if(el && el.className.includes('active')) setStep(id,'err');
+    });
+    const e2=document.getElementById('err-box');
+    e2.textContent='Error: '+e.message;
+    e2.classList.add('on');
+  }
+}
+
+function togAcc(id){document.getElementById(id).classList.toggle('open');}
+
+function render(d,showTr){
+  showPage('page-res');
+  ['acc-summary','acc-kp','acc-hl','acc-ch','acc-tr'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('open');});
+  document.getElementById('sp-chips').innerHTML=(d.speakers||[]).map((s,i)=>{const c=COLORS[i%COLORS.length];const init=(s.name||s.label||'?').charAt(0).toUpperCase();return `<div class="sp-chip"><div class="sp-av" style="background:${c}">${init}</div><div><div class="sp-name">${esc(s.name||s.label)}</div><div class="sp-role">${esc(s.role||'Participant')}</div></div></div>`;}).join('');
+  const sarr=Array.isArray(d.tabs?.summary)?d.tabs.summary:[{point:String(d.tabs?.summary||''),subPoints:[]}];
+  document.getElementById('sum-list').innerHTML=sarr.length&&sarr[0].point?sarr.map(b=>`<div class="bul-item"><div class="bul-main">${esc(b.point)}</div><div class="bul-subs">${(b.subPoints||[]).map(s=>`<div class="bul-sub">${esc(s)}</div>`).join('')}</div></div>`).join(''):'<div style="font-size:13px;color:var(--ink3);font-style:italic;">No summary generated.</div>';
+  document.getElementById('sum-count').textContent=sarr.filter(b=>b.point).length||'';
+  const karr=Array.isArray(d.tabs?.keyPoints)?d.tabs.keyPoints:[];
+  document.getElementById('kp-list').innerHTML=karr.length?karr.map(k=>{const pt=typeof k==='string'?k:k.point;const subs=typeof k==='string'?[]:(k.subPoints||[]);return `<div class="kp-item"><div class="kp-main">${esc(pt)}</div><div class="kp-subs">${subs.map(s=>`<div class="kp-sub">${esc(s)}</div>`).join('')}</div></div>`;}).join(''):'<div style="font-size:13px;color:var(--ink3);font-style:italic;">No decisions or action items detected.</div>';
+  document.getElementById('kp-count').textContent=karr.length||'';
+  const hlarr=d.tabs?.highlights||[];
+  document.getElementById('hl-list').innerHTML=hlarr.length?hlarr.map(h=>`<div class="hl"><div class="hl-sp">${esc(h.speaker)}</div><div class="hl-q">"${esc(h.quote)}"</div><div class="hl-ctx">${esc(h.context)}</div></div>`).join(''):'<div style="font-size:13px;color:var(--ink3);font-style:italic;">No notable highlights found.</div>';
+  document.getElementById('hl-count').textContent=hlarr.length||'';
+  const charr=d.chapters||[];
+  document.getElementById('ch-list').innerHTML=charr.length?charr.map((c,i)=>`<div class="ch"><div class="ch-hd"><div class="ch-n">${i+1}</div><div class="ch-title">${esc(c.title)}</div>${c.timestamp?`<div class="ch-time">${esc(c.timestamp)}</div>`:''}</div><div class="ch-body">${esc(c.summary)}</div></div>`).join(''):'<div style="font-size:13px;color:var(--ink3);font-style:italic;">No chapters detected.</div>';
+  document.getElementById('ch-count').textContent=charr.length||'';
+  const trEl=document.getElementById('acc-tr');
+  if(showTr&&d.transcripts){
+    trEl.style.display='block';
+    trEl.classList.add('open');
+    renderTr('translated');
+    const trLines=(d.transcripts.translated||'').split('\n').filter(l=>l.trim()).length;
+    const trCountEl=document.getElementById('tr-count');
+    if(trCountEl)trCountEl.textContent=trLines+' lines';
+  } else trEl.style.display='none';
+}
+
+function renderTr(lang){
+  trLang=lang;const tr=data?.transcripts;if(!tr)return;
+  const src=tr[lang]||tr['translated']||'';
+  document.getElementById('tr-body').innerHTML=src.split('\n').filter(l=>l.trim()).map(l=>{
+    const isJp=l.includes('- JP]:') || l.includes('-JP]:');
+    // Match: [M:SS] [Speaker]: text  OR  [Speaker]: text
+    const mTs=l.match(/^(\[\d+:\d+\])\s*\[(.+?)\]:\s*(.+)$/);
+    const mPlain=l.match(/^\[(.+?)\]:\s*(.+)$/);
+    if(mTs){
+      return `<div class="tr-line${isJp?' jp':''}"><span class="tr-ts">${esc(mTs[1])}</span> ${isJp?'':'<strong>'}${esc(mTs[2])}:${isJp?'':'</strong>'} ${esc(mTs[3])}</div>`;
+    } else if(mPlain){
+      return `<div class="tr-line${isJp?' jp':''}">${isJp?'':'<strong>'}${esc(mPlain[1])}:${isJp?'':'</strong>'} ${esc(mPlain[2])}</div>`;
+    }
+    return `<div class="tr-line${isJp?' jp':''}">${esc(l)}</div>`;
+  }).join('');
+}
+function setTrLang(lang,el){document.querySelectorAll('.tr-btn').forEach(b=>b.classList.remove('on'));el.classList.add('on');renderTr(lang);}
+
+function copySummary(){
+  if(!data)return;const t=data.tabs;
+  const sarr=Array.isArray(t?.summary)?t.summary:[{point:String(t?.summary||''),subPoints:[]}];
+  const stxt=sarr.map(b=>`• ${b.point}\n${(b.subPoints||[]).map(s=>`  – ${s}`).join('\n')}`).join('\n\n');
+  const karr=Array.isArray(t?.keyPoints)?t.keyPoints:[];
+  const ktxt=karr.map((k,i)=>{const pt=typeof k==='string'?k:k.point;const subs=typeof k==='string'?[]:(k.subPoints||[]);return `${i+1}. ${pt}\n${subs.map(s=>`   · ${s}`).join('\n')}`;}).join('\n\n');
+  navigator.clipboard.writeText(['=== SUMMARY ===',stxt,'','=== KEY POINTS ===',ktxt,'','=== HIGHLIGHTS ===',(t?.highlights||[]).map(h=>`[${h.speaker}] "${h.quote}"\n→ ${h.context}`).join('\n\n')].join('\n')).then(()=>{const b=document.getElementById('copy-btn');b.textContent='✓ Copied!';b.classList.add('ok');setTimeout(()=>{b.textContent='Copy summary';b.classList.remove('ok');},2000);});
+}
+
+function dlTxt(){
+  if(!data)return;const t=data.tabs;
+  const sp=(data.speakers||[]).map(s=>`• ${s.name||s.label}${s.role?' ('+s.role+')':''}: ${s.summary||''}`).join('\n');
+  const sarr=Array.isArray(t?.summary)?t.summary:[{point:String(t?.summary||''),subPoints:[]}];
+  const stxt=sarr.map(b=>`• ${b.point}\n${(b.subPoints||[]).map(s=>`  – ${s}`).join('\n')}`).join('\n\n');
+  const karr=Array.isArray(t?.keyPoints)?t.keyPoints:[];
+  const ktxt=karr.map((k,i)=>{const pt=typeof k==='string'?k:k.point;const subs=typeof k==='string'?[]:(k.subPoints||[]);return `${i+1}. ${pt}\n${subs.map(s=>`   · ${s}`).join('\n')}`;}).join('\n\n');
+  const ch=(data.chapters||[]).map((c,i)=>`Chapter ${i+1}: ${c.title}${c.timestamp?'\nTime: '+c.timestamp:''}\n${c.summary}`).join('\n\n');
+  const txt=['KAIWA — MEETING ANALYSIS','========================','','PARTICIPANTS',sp,'','SUMMARY',stxt,'','CHAPTERS',ch,'','KEY POINTS',ktxt,'','HIGHLIGHTS',(t?.highlights||[]).map(h=>`[${h.speaker}]\n"${h.quote}"\n→ ${h.context}`).join('\n\n'),'','TRANSCRIPT',data?.transcripts?.translated||'(not included)'].join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain'}));a.download='kaiwa-report.txt';a.click();
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+</script>
+</body>
+</html>
